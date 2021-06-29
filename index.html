@@ -167,7 +167,7 @@
             // Set the login anchors href using dbx.getAuthenticationUrl()
             var CLIENT_ID = '0xmo16xy0ki1tbd';
             var dbx = new Dropbox.Dropbox({ clientId: CLIENT_ID });
-            var authUrl = dbx.auth.getAuthenticationUrl(  window.location.origin+'/auth.html')
+            var authUrl = dbx.auth.getAuthenticationUrl(  window.location.href+'/auth.html')
               .then((authUrl) => {
                 document.getElementById('dropbox-authlink').href = authUrl;
               }
@@ -258,7 +258,7 @@
               sourceInputElementId: "",
               sourceUri: data,
               advanced: {
-                redirectUri: window.location.origin+"/auth_onedrive.html"
+                redirectUri: window.location.href+"/auth_onedrive.html"
               },
               //https://github.com/OneDrive/onedrive-api-docs/issues/1350#issuecomment-675914666
               fileName: filename,
