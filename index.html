@@ -6,6 +6,7 @@
     <script src="Resources/dynamsoft.webtwain.config.js"> </script>
     <script src="/Dropbox-sdk.min.js"></script>
     <script src="/utils.js"></script>
+    <script type="text/javascript" src="https://js.live.net/v7.2/OneDrive.js"></script>
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
 </head>
 
@@ -19,6 +20,7 @@
     <br/>
     <a href="" id="dropbox-authlink" target="_blank" class="button" style="display:none;">Authenticate</a>
     <input type="button" value="Upload to Dropbox (PDF)" onclick="ConvertAndUpload(this.value);"/>
+    <input type="button" value="Upload to Onedrive (PDF)" onclick="ConvertAndUpload(this.value);"/>
     <br/>
     <label>Path: <input type="text" id="path" name="path" onchange="UpdatePath(this.value)"></label>
     <div id="status"></div>
@@ -192,28 +194,41 @@
         }
         
         function ConvertAndUpload(value){
-            if (isAuthenticated()){
-                var indices = imageIndices();
-                DWObject.ConvertToBlob(
+            var indices = imageIndices();
+            var filename = getFormattedDate()+".pdf";
+            if (value.indexOf("Onedrive")!=-1){
+                DWObject.ConvertToBase64(
                     indices,
                     Dynamsoft.DWT.EnumDWT_ImageType.IT_PDF,
                     function(result, indices, type) {
-                        UploadPDFtoDropbox(result);
+                        launchSaveToOneDrive("data:application/pdf;base64,"+result.getData(0, result.getLength()),filename);
                     },
                     function(errorCode, errorString) {
                         console.log(errorString);
                     }
                 );
             }else{
-                alert("Please authorize first.");
-                document.getElementById("dropbox-authlink").click();
+                if (isAuthenticated()){
+                    DWObject.ConvertToBlob(
+                        indices,
+                        Dynamsoft.DWT.EnumDWT_ImageType.IT_PDF,
+                        function(result, indices, type) {
+                            UploadPDFtoDropbox(result,filename);
+                        },
+                        function(errorCode, errorString) {
+                            console.log(errorString);
+                        }
+                    );
+                }else{
+                    alert("Please authorize first.");
+                    document.getElementById("dropbox-authlink").click();
+                }
             }
-            
         }
         
-        function UploadPDFtoDropbox(blob){
+        function UploadPDFtoDropbox(blob,filename){
             updateStatus("uploading...");
-            var file = new File([blob], getFormattedDate()+".pdf",{type:"application/pdf", lastModified:new Date().getTime()});
+            var file = new File([blob], filename,{type:"application/pdf", lastModified:new Date().getTime()});
             console.log(file);
             var ACCESS_TOKEN = getAccessTokenFromCookie();
             var dbx = new Dropbox.Dropbox({ accessToken: ACCESS_TOKEN });
@@ -226,6 +241,26 @@
           .catch(function(error) {
             console.error(error);
           });
+        }
+        
+        function launchSaveToOneDrive(data, filename){
+            var odOptions = {
+              clientId: "2c6152a3-efb8-46e1-bfbd-8902a1fdc052",
+              action: "save",
+              sourceInputElementId: "",
+              sourceUri: data,
+              advanced: {
+                redirectUri: window.location.origin+"/auth_onedrive.html"
+              },
+              //https://github.com/OneDrive/onedrive-api-docs/issues/1350#issuecomment-675914666
+              fileName: filename,
+              openInNewWindow: true,
+              success: function(files) { /* success handler */ },
+              progress: function(percent) { /* progress handler */ },
+              cancel: function() { /* cancel handler */ },
+              error: function(error) { console.log(error); }
+            }
+            OneDrive.save(odOptions);
         }
         
     </script>
