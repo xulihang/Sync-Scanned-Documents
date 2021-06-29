@@ -1,0 +1,234 @@
+<html>
+
+<head>
+    <title>Hello World</title>
+    <script src="Resources/dynamsoft.webtwain.initiate.js"> </script>
+    <script src="Resources/dynamsoft.webtwain.config.js"> </script>
+    <script src="/Dropbox-sdk.min.js"></script>
+    <script src="/utils.js"></script>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+</head>
+
+<body>
+    <input type="button" value="Scan" onclick="AcquireImage();" />
+    <br/>
+    <input type="button" value="Save Selected (JPG)" onclick="SaveSelected();" />
+    <input type="button" value="Save All (JPG)" onclick="SaveAll(0);" />
+    <input type="button" value="Save All (PDF)" onclick="SaveAllAsPDF();" />
+    
+    <br/>
+    <a href="" id="dropbox-authlink" target="_blank" class="button" style="display:none;">Authenticate</a>
+    <input type="button" value="Upload to Dropbox (PDF)" onclick="ConvertAndUpload(this.value);"/>
+    <br/>
+    <label>Path: <input type="text" id="path" name="path" onchange="UpdatePath(this.value)"></label>
+    <div id="status"></div>
+    <div id="dwtcontrolContainer"></div>
+    <script type="text/javascript">
+        var DWObject;
+        var path="";
+        var saveAll=false;
+        LoadAuthHref();
+        function Dynamsoft_OnReady() {
+            DWObject = Dynamsoft.DWT.GetWebTwain('dwtcontrolContainer');
+            DWObject.IfShowFileDialog = true;
+            DWObject.RegisterEvent("OnGetFilePath", (isSave, filesCount, index, directory, _fn) => {
+                if (directory === "" && _fn === "") {
+                    console.log("User cancelled the operation.")
+                    DWObject.IfShowFileDialog = true;
+                } else {                    
+                    document.getElementById("path").value=directory;
+                    path=directory;
+                    DWObject.IfShowFileDialog = false;
+                    if (saveAll){
+                        SaveAll(1);
+                    }
+                }
+            });
+        }
+
+        function AcquireImage() {
+            if (DWObject) {
+                if (Dynamsoft.Lib.env.bMobile) {
+                    DWObject.LoadImageEx('', 5,
+                        function() {
+                            console.log('success');
+                        },
+                        function(errCode, error) {
+                            alert(error);
+                        }
+                    );
+                } else {
+                    DWObject.SelectSource(function() {
+                            DWObject.OpenSource();
+                            DWObject.AcquireImage();
+                        },
+                        function() {
+                            console.log("SelectSource failed!");
+                        }
+                    );
+                }
+            }
+        }
+
+        function SaveSelected(){
+            saveAll=false;
+            SaveAsJPEG(getFormattedDate(),DWObject.CurrentImageIndexInBuffer);
+        }
+        
+        function SaveAsJPEG(filename,index) {
+            //If the current image is B&W
+            //1 is B&W, 8 is Gray, 24 is RGB
+            if (DWObject.GetImageBitDepth(index) == 1)
+                //If so, convert the image to Gray
+                DWObject.ConvertToGrayScale(index);
+            var fullPath = path+"/"+filename+".jpg";
+            console.log(fullPath);
+            DWObject.SaveAsJPEG(fullPath, index,
+                function() {
+                    console.log('Successful!');
+                },
+                function(errCode, errString) {
+                    console.log(errString);
+                }
+            );
+
+        }
+        
+        function SaveAll(startIndex){
+            saveAll=true;
+            if (DWObject.IfShowFileDialog==true){
+                var filename = getFormattedDate()+"-1";
+                SaveAsJPEG(filename,0);
+            }else {
+                for (var i = startIndex; i < DWObject.HowManyImagesInBuffer; i++) {
+                    var filename = getFormattedDate()+"-"+(i+1);
+                    SaveAsJPEG(filename,i);
+                }
+            }
+        }
+        
+        function SaveAllAsPDF(){
+            var fullPath = path+"/"+getFormattedDate()+".pdf";
+            DWObject.SaveAllAsPDF(fullPath,
+                function() {
+                    console.log('Successful!');
+                },
+                function(errCode, errString) {
+                    console.log(errString);
+                }
+            );
+        }
+        
+        function getFormattedDate() {
+            var date = new Date();
+
+            var month = date.getMonth() + 1;
+            var day = date.getDate();
+            var hour = date.getHours();
+            var min = date.getMinutes();
+            var sec = date.getSeconds();
+
+            month = (month < 10 ? "0" : "") + month;
+            day = (day < 10 ? "0" : "") + day;
+            hour = (hour < 10 ? "0" : "") + hour;
+            min = (min < 10 ? "0" : "") + min;
+            sec = (sec < 10 ? "0" : "") + sec;
+
+            var str = date.getFullYear().toString() + month + day + hour + min + sec;
+
+            return str;
+        }
+        
+        function UpdatePath(value){
+            path=value;
+            DWObject.IfShowFileDialog = false;
+        }
+        
+        function imageIndices(){
+            var indices = [];
+            for (var i=0;i<DWObject.HowManyImagesInBuffer;i++){
+                indices.push(i)
+            }
+            
+            return indices;
+        }
+        
+        function LoadAuthHref(){
+            // Set the login anchors href using dbx.getAuthenticationUrl()
+            var CLIENT_ID = '0xmo16xy0ki1tbd';
+            var dbx = new Dropbox.Dropbox({ clientId: CLIENT_ID });
+            var authUrl = dbx.auth.getAuthenticationUrl(  window.location.origin+'/auth.html')
+              .then((authUrl) => {
+                document.getElementById('dropbox-authlink').href = authUrl;
+              }
+            )
+        }
+
+        function getAccessTokenFromCookie() {
+            var token = getCookie("token");
+            return token;
+        }
+        
+        function getCookie(cname)
+        {
+            var name = cname + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0; i<ca.length; i++) 
+            {
+              var c = ca[i].trim();
+              if (c.indexOf(name)==0) return c.substring(name.length,c.length);
+            }
+            return "";
+        }
+
+        // If the user was just redirected from authenticating, the urls hash will
+        // contain the access token.
+        function isAuthenticated() {
+            return !!getAccessTokenFromCookie();
+        }
+        
+        function updateStatus(status){
+            document.getElementById("status").innerText=status;
+        }
+        
+        function ConvertAndUpload(value){
+            if (isAuthenticated()){
+                var indices = imageIndices();
+                DWObject.ConvertToBlob(
+                    indices,
+                    Dynamsoft.DWT.EnumDWT_ImageType.IT_PDF,
+                    function(result, indices, type) {
+                        UploadPDFtoDropbox(result);
+                    },
+                    function(errorCode, errorString) {
+                        console.log(errorString);
+                    }
+                );
+            }else{
+                alert("Please authorize first.");
+                document.getElementById("dropbox-authlink").click();
+            }
+            
+        }
+        
+        function UploadPDFtoDropbox(blob){
+            updateStatus("uploading...");
+            var file = new File([blob], getFormattedDate()+".pdf",{type:"application/pdf", lastModified:new Date().getTime()});
+            console.log(file);
+            var ACCESS_TOKEN = getAccessTokenFromCookie();
+            var dbx = new Dropbox.Dropbox({ accessToken: ACCESS_TOKEN });
+            dbx.filesUpload({path: '/' + file.name, contents: file})
+              .then(function(response) {
+                alert('File uploaded!');
+                updateStatus("");
+                console.log(response);
+          })
+          .catch(function(error) {
+            console.error(error);
+          });
+        }
+        
+    </script>
+</body>
+
+</html>
