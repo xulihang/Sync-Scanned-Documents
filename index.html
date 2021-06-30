@@ -36,7 +36,11 @@
         window.onload = function() {
             Dynamsoft.DWT.Containers = [{ContainerId: "dwtcontrolContainer", Width: "270px", Height: "350px"}];
             Dynamsoft.DWT.ProductKey = "t0149KQMAAEuKf181h8Tt/nPBGDJIIGm7R/hxF3KTIkQLSOL0VKYUpLTRPpkmamQkxv4cIk/hcJy/xeeTAlO8eSSZKwnrf7zy2BCOwWYio/rQGFbzMqO4ev72+Rqb9c+8UT86fRrDCaNjY/vpGzfztUP6mVvDCaNj42ZujL/nXIaEQyH76aVnOGF0bM7Md8OQKDHkD3uXotg=";
-            Dynamsoft.DWT.UseLocalService = true;
+            if (Dynamsoft.Lib.env.bMobile){
+                Dynamsoft.DWT.UseLocalService = false;
+            }else{
+                Dynamsoft.DWT.UseLocalService = true;
+            }
             Dynamsoft.DWT.ResourcesPath = "https://unpkg.com/dwt@17.1.1/dist";
             Dynamsoft.DWT.Load();
         };
