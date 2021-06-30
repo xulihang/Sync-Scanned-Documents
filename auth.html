@@ -9,8 +9,10 @@
     <script type="text/javascript">
         // Parses the url and gets the access token if it is in the urls hash
         var token = utils.parseQueryString(window.location.hash).access_token;
-        console.log(token);
-        document.cookie="token="+token+";";
+        var expires_in = utils.parseQueryString(window.location.hash).expires_in;
+        var expires = new Date().getTime()+parseInt(expires_in); 
+        document.cookie="dropbox_expires="+expires+";";
+        document.cookie="dropbox_token="+token+";";
         if (!!token){
             alert("You have been authorized.");
         }else{

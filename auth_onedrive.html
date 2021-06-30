@@ -1,3 +1,25 @@
 <html>
-<script type="text/javascript" src="https://js.live.net/v7.2/OneDrive.js"></script>
+<head>
+    <title>Auth</title>
+    <script src="utils.js"></script>
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=0" />
+</head>
+<body>
+    <p>Please close the page.</p>
+    <script type="text/javascript">
+        // Parses the url and gets the access token if it is in the urls hash
+        var token = utils.parseQueryString(window.location.hash).access_token;
+        var expires_in = utils.parseQueryString(window.location.hash).expires_in;
+        var expires = new Date().getTime()+parseInt(expires_in); 
+        document.cookie="onedrive_token="+token+";";
+        document.cookie="onedrive_expires="+expires+";";
+        if (!!token){
+            alert("You have been authorized.");
+        }else{
+            alert("You have not been authorized.");
+        }
+        window.close();
+    </script>
+</body>
+
 </html>
