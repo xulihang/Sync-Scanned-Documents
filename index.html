@@ -188,7 +188,7 @@
         
         function LoadDropboxAuthHref(){
             // Set the login anchors href using dbx.getAuthenticationUrl()
-            var CLIENT_ID = '0xmo16xy0ki1tbd';
+            var CLIENT_ID = '0x25v6jq71m3cpm';
             var dbx = new Dropbox.Dropbox({ clientId: CLIENT_ID });
             var authUrl = dbx.auth.getAuthenticationUrl(  window.location.href+'auth.html')
               .then((authUrl) => {
@@ -198,7 +198,7 @@
         }
         
         function LoadOnedriveAuthHref(){
-            var CLIENT_ID = '2c6152a3-efb8-46e1-bfbd-8902a1fdc052';
+            var CLIENT_ID = '2dfb77f2-ed6e-4a06-8219-1d3140b1a30e';
             var redirectUri = window.location.href+"auth_onedrive.html";
             var authurl = "https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id="+CLIENT_ID+"&scope=Files.ReadWrite.All&response_type=token&redirect_uri="+redirectUri;
             document.getElementById('onedrive-authlink').href = authurl;
