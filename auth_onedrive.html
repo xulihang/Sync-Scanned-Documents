@@ -11,9 +11,9 @@
         var token = utils.parseQueryString(window.location.hash).access_token;
         var expires_in = utils.parseQueryString(window.location.hash).expires_in;
         var expires = new Date().getTime()+parseInt(expires_in); 
-        document.cookie="onedrive_token="+token+";";
-        document.cookie="onedrive_expires="+expires+";";
         if (!!token){
+            document.cookie="onedrive_token="+token+";";
+            document.cookie="onedrive_expires="+expires+";";
             alert("You have been authorized.");
         }else{
             alert("You have not been authorized.");

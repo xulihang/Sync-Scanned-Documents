@@ -11,9 +11,9 @@
         var token = utils.parseQueryString(window.location.hash).access_token;
         var expires_in = utils.parseQueryString(window.location.hash).expires_in;
         var expires = new Date().getTime()+parseInt(expires_in); 
-        document.cookie="dropbox_expires="+expires+";";
-        document.cookie="dropbox_token="+token+";";
         if (!!token){
+            document.cookie="dropbox_expires="+expires+";";
+            document.cookie="dropbox_token="+token+";";
             alert("You have been authorized.");
         }else{
             alert("You have not been authorized.");
